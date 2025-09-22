@@ -14,13 +14,11 @@ class ChuckerHttpLoggingInterceptor implements Interceptor {
     Logger.request('${requestBase.method} ${requestBase.url}');
     requestBase.headers.forEach((k, v) => Logger.request('$k: $v'));
 
+    final body = _getRequestBody(requestBase);
     var bytes = '';
-    if (requestBase is http.Request) {
-      final body = requestBase.body;
-      if (body.isNotEmpty) {
-        Logger.json(body, isRequest: true);
-        bytes = ' (${requestBase.bodyBytes.length}-byte body)';
-      }
+    if (body.isNotEmpty) {
+      Logger.json(body, isRequest: true);
+      bytes = ' (${body.length}-byte body)';
     }
 
     Logger.request('END ${requestBase.method}$bytes');
@@ -43,5 +41,15 @@ class ChuckerHttpLoggingInterceptor implements Interceptor {
 
     Logger.response('END ${base.method}$responseBytes');
     return response;
+  }
+
+  String _getRequestBody(http.BaseRequest requestBase) {
+    if (requestBase is http.Request) {
+      return requestBase.body;
+    } else if (requestBase is http.MultipartRequest) {
+      return '<multipart body>';
+    } else {
+      return '<unavailable body>';
+    }
   }
 }
